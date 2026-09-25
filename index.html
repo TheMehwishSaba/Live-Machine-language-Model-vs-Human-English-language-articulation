@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vocal Tract Field Notes — Soundboard Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151a;
+    --bg-2:#191d24;
+    --panel:#1c2129;
+    --line:#2c323d;
+    --bone:#efe6d6;
+    --paper:#efe9df;
+    --ink:#e9e4dc;
+    --muted:#8b93a1;
+    --dim:#5b6270;
+    --amber:#e2a444;
+    --teal:#4fbfae;
+    --rec:#e2543f;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .frame{ max-width:1220px; margin:0 auto; padding:22px 22px 34px; }
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:20px; border-bottom:1px solid var(--line);
+    padding-bottom:16px; margin-bottom:18px; flex-wrap:wrap;
+  }
+  .masthead h1{
+    font-family:'Fraunces', serif; font-optical-sizing:auto; font-weight:600;
+    font-size:clamp(1.6rem, 3vw, 2.3rem); margin:0 0 4px;
+    letter-spacing:-0.01em; color:var(--paper);
+  }
+  .masthead p{ margin:0; color:var(--muted); font-size:0.9rem; max-width:52ch; line-height:1.5; }
+  .rec{
+    display:flex; align-items:center; gap:9px;
+    font-family:'IBM Plex Mono', monospace; font-size:0.8rem;
+    color:var(--muted); white-space:nowrap; padding-bottom:6px;
+  }
+  .rec .dot{
+    width:9px;height:9px;border-radius:50%; background:var(--rec);
+    box-shadow:0 0 0 3px rgba(226,84,63,0.18);
+    animation:blink 1.6s ease-in-out infinite;
+  }
+  @keyframes blink{ 0%,45%{opacity:1;} 50%,95%{opacity:0.25;} 100%{opacity:1;} }
+
+  .audio-banner{
+    display:none;
+    align-items:center; gap:8px;
+    background:#241a10; border:1px solid #4a341a; color:var(--amber);
+    font-size:0.8rem; padding:8px 12px; border-radius:4px; margin-bottom:14px;
+  }
+  .audio-banner.show{ display:flex; }
+  .audio-banner button{
+    background:var(--amber); color:#1a1406; border:none; border-radius:3px;
+    padding:5px 10px; font-size:0.76rem; font-weight:600; cursor:pointer; margin-left:auto;
+  }
+
+  /* ---------- Layout ---------- */
+  .stage-wrap{ display:grid; grid-template-columns: 1.3fr 1fr; gap:18px; }
+  @media (max-width: 900px){ .stage-wrap{ grid-template-columns: 1fr; } }
+
+  /* ---------- Viewfinder / stage ---------- */
+  .viewfinder{
+    position:relative;
+    background:radial-gradient(120% 90% at 68% 38%, #202631 0%, #14171d 72%);
+    border:1px solid var(--line); border-radius:4px; overflow:hidden;
+    aspect-ratio: 4 / 3.35;
+  }
+  .bracket{ position:absolute; width:22px;height:22px; border-color:rgba(233,228,220,0.55); border-style:solid; border-width:0; z-index:5; }
+  .bracket.tl{ top:12px; left:12px; border-top-width:2px; border-left-width:2px; }
+  .bracket.tr{ top:12px; right:12px; border-top-width:2px; border-right-width:2px; }
+  .bracket.bl{ bottom:12px; left:12px; border-bottom-width:2px; border-left-width:2px; }
+  .bracket.br{ bottom:12px; right:12px; border-bottom-width:2px; border-right-width:2px; }
+  .slate{ position:absolute; top:14px; left:44px; z-index:5; font-family:'IBM Plex Mono', monospace; font-size:0.65rem; color:rgba(233,228,220,0.55); letter-spacing:0.03em; }
+  .tcode{ position:absolute; bottom:16px; right:44px; z-index:5; font-family:'IBM Plex Mono', monospace; font-size:0.7rem; color:rgba(233,228,220,0.6); }
+  .scanline{
+    position:absolute; left:0; right:0; height:120px;
+    background:linear-gradient(to bottom, rgba(79,191,174,0) 0%, rgba(79,191,174,0.05) 50%, rgba(79,191,174,0) 100%);
+    animation:sweep 7s linear infinite; pointer-events:none; z-index:4;
+  }
+  @keyframes sweep{ 0%{ transform:translateY(-140px); } 100%{ transform:translateY(calc(100% + 140px)); } }
+
+  svg#tract{ position:relative; z-index:2; width:100%; height:100%; display:block; }
+
+  .caption-bar{
+    position:absolute; left:0; right:0; bottom:0; padding:10px 16px 10px 44px;
+    background:linear-gradient(to top, rgba(10,12,15,0.88), rgba(10,12,15,0)); z-index:5;
+    font-family:'IBM Plex Mono', monospace; font-size:0.74rem; color:var(--teal); letter-spacing:0.02em;
+  }
+
+  /* static/permanent anatomy labels */
+  .static-label{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px;
+    fill:var(--dim); letter-spacing:0.02em;
+  }
+  .static-line{ stroke:#454c59; stroke-width:0.8; opacity:0.75; }
+  .static-dot{ fill:#5b6270; }
+
+  /* dynamic highlight marker styling */
+  .hl-ring{ fill:none; stroke:var(--amber); stroke-width:2.4; animation:pulse 1.6s ease-out infinite; filter:drop-shadow(0 0 5px rgba(226,164,68,0.7)); }
+  @keyframes pulse{ 0%{ r:7; opacity:1; } 75%{ r:22; opacity:0; } 100%{ r:22; opacity:0; } }
+  .hl-core{ fill:var(--amber); }
+  .hl-line{ stroke:var(--amber); stroke-width:1.3; stroke-dasharray:2 3; opacity:0.9; }
+  .hl-label{ font-family:'IBM Plex Mono', monospace; font-size:12.5px; font-weight:600; fill:var(--amber); text-transform:uppercase; letter-spacing:0.04em; }
+
+  /* speaking pulse on glottis when audio plays */
+  .voicing-pulse{ animation:voice-flash 0.35s ease-in-out infinite; }
+  @keyframes voice-flash{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  /* ---------- Control panel ---------- */
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:18px; display:flex; flex-direction:column; gap:14px; }
+  .panel-label{ font-size:0.7rem; color:var(--muted); letter-spacing:0.03em; display:flex; justify-content:space-between; align-items:center; }
+  .panel-label .hint{ color:var(--dim); font-size:0.66rem; }
+
+  .keys{ display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; }
+  .keys button{
+    position:relative;
+    font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:0.9rem; color:var(--ink);
+    background:var(--bg-2); border:1px solid var(--line); border-radius:3px; padding:9px 0 7px;
+    cursor:pointer; transition:background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+  }
+  .keys button:hover{ border-color:var(--teal); color:var(--teal); }
+  .keys button:active{ transform:scale(0.94); }
+  .keys button.active{ background:var(--amber); border-color:var(--amber); color:#1a1406; }
+  .keys button .n-badge{
+    position:absolute; top:1px; right:2px; font-size:7px; color:var(--teal); font-family:'IBM Plex Mono',monospace;
+  }
+  .keys button.active .n-badge{ color:#1a1406; opacity:0.7; }
+
+  /* soundboard variant row */
+  .variants{ display:flex; flex-direction:column; gap:6px; }
+  .variant-btn{
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-2); border:1px solid var(--line); border-radius:4px;
+    padding:9px 11px; cursor:pointer; text-align:left; color:var(--ink);
+    transition:border-color 0.12s, background 0.12s;
+  }
+  .variant-btn:hover{ border-color:var(--teal); }
+  .variant-btn.active{ border-color:var(--amber); background:#241d12; }
+  .variant-btn .play-ico{
+    flex:0 0 auto; width:26px; height:26px; border-radius:50%;
+    background:var(--teal); color:#0d1512; display:flex; align-items:center; justify-content:center;
+    font-size:11px;
+  }
+  .variant-btn.active .play-ico{ background:var(--amber); }
+  .variant-btn .vtext{ flex:1; min-width:0; }
+  .variant-btn .vtext .vipa{ font-family:'IBM Plex Mono', monospace; font-size:0.92rem; color:var(--teal); }
+  .variant-btn.active .vtext .vipa{ color:var(--amber); }
+  .variant-btn .vtext .vplace{ font-size:0.72rem; color:var(--muted); }
+  .variant-btn .vword{ font-size:0.72rem; color:var(--dim); flex:0 0 auto; }
+
+  .readout{ border-top:1px solid var(--line); padding-top:14px; min-height:190px; }
+  .readout .letter-row{ display:flex; align-items:baseline; gap:14px; margin-bottom:10px; }
+  .readout .big-letter{ font-family:'Fraunces', serif; font-weight:700; font-size:2.6rem; line-height:1; color:var(--paper); }
+  .readout .ipa{ font-family:'IBM Plex Mono', monospace; font-size:1rem; color:var(--teal); }
+  .tags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .tag{ font-size:0.7rem; letter-spacing:0.02em; padding:4px 9px; border-radius:20px; border:1px solid var(--line); color:var(--muted); }
+  .tag.place{ color:var(--amber); border-color:rgba(226,164,68,0.4); }
+  .tag.manner{ color:var(--teal); border-color:rgba(79,191,174,0.4); }
+  .readout p.desc{ font-size:0.9rem; line-height:1.55; color:var(--ink); margin:0 0 10px; }
+  .readout .example-row{ display:flex; align-items:center; gap:8px; font-size:0.84rem; color:var(--muted); }
+  .readout .example-row b{ color:var(--ink); font-weight:600; }
+  .word-btn{
+    background:none; border:1px solid var(--line); color:var(--teal);
+    border-radius:20px; padding:3px 10px; font-size:0.74rem; cursor:pointer;
+  }
+  .word-btn:hover{ border-color:var(--teal); }
+  .placeholder{ color:var(--muted); font-size:0.88rem; padding-top:26px; text-align:center; line-height:1.6; }
+
+  /* ---------- Specimen mode toggle ---------- */
+  .mode-toggle{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .mode-btn{
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel); border:1px solid var(--line); border-radius:4px;
+    padding:10px 16px; cursor:pointer; text-align:left; color:var(--ink);
+    transition:border-color 0.15s, background 0.15s; flex:1; min-width:220px;
+  }
+  .mode-btn:hover{ border-color:var(--teal); }
+  .mode-btn.active{ border-color:var(--amber); background:#211a10; }
+  .mode-btn .mode-num{
+    font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--dim);
+    border:1px solid var(--line); border-radius:3px; padding:3px 6px; flex:0 0 auto;
+  }
+  .mode-btn.active .mode-num{ color:var(--amber); border-color:rgba(226,164,68,0.4); }
+  .mode-btn .mode-text{ display:flex; flex-direction:column; gap:1px; }
+  .mode-btn .mode-text strong{ font-size:0.88rem; font-weight:600; }
+  .mode-btn .mode-text small{ font-size:0.72rem; color:var(--muted); }
+
+  /* ---------- AI pipeline view ---------- */
+  .pipe-stage-area{ position:relative; z-index:2; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; gap:22px; padding:50px 20px 40px; }
+  .pipe-subtoggle{ display:flex; gap:8px; justify-content:center; }
+  .pipe-sub-btn{
+    background:var(--bg-2); border:1px solid var(--line); color:var(--muted);
+    border-radius:20px; padding:6px 14px; font-size:0.76rem; cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .pipe-sub-btn.active{ background:var(--teal); border-color:var(--teal); color:#0d1512; font-weight:600; }
+
+  .pipe-flow{ display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; }
+  .pipe-box{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    width:112px; padding:12px 8px; border-radius:5px;
+    background:var(--bg-2); border:1px solid var(--line);
+    transition:border-color 0.2s, background 0.2s, transform 0.15s;
+  }
+  .pipe-box.active{ border-color:var(--amber); background:#241d12; transform:translateY(-3px); }
+  .pipe-box .pipe-icon{ width:36px; height:36px; display:flex; align-items:center; justify-content:center; }
+  .pipe-box .pipe-name{ font-size:0.72rem; font-weight:600; text-align:center; color:var(--ink); line-height:1.25; }
+  .pipe-box .pipe-term{ font-size:0.62rem; color:var(--dim); text-align:center; font-family:'IBM Plex Mono', monospace; }
+  .pipe-arrow{ color:var(--dim); font-size:1.1rem; flex:0 0 auto; }
+  .pipe-box.active .pipe-term{ color:var(--amber); }
+
+  /* mini stage icons, pure CSS */
+  .icon-wave{ display:flex; align-items:flex-end; gap:2px; height:24px; }
+  .icon-wave span{ width:3px; background:var(--teal); border-radius:1px; }
+  .pipe-box.active .icon-wave span{ background:var(--amber); }
+  .icon-spec{ display:grid; grid-template-columns:repeat(5,1fr); gap:2px; width:30px; height:24px; }
+  .icon-spec span{ background:var(--teal); border-radius:1px; }
+  .pipe-box.active .icon-spec span{ background:var(--amber); }
+  .icon-net{ position:relative; width:32px; height:26px; }
+  .icon-net span{ position:absolute; width:5px; height:5px; border-radius:50%; background:var(--teal); }
+  .pipe-box.active .icon-net span{ background:var(--amber); }
+  .icon-text{ display:flex; flex-direction:column; gap:3px; width:28px; }
+  .icon-text span{ height:3px; background:var(--teal); border-radius:1px; }
+  .pipe-box.active .icon-text span{ background:var(--amber); }
+  .icon-funnel{ width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent; border-top:20px solid var(--teal); }
+  .pipe-box.active .icon-funnel{ border-top-color:var(--amber); }
+
+  .pipe-stage-list{ display:flex; flex-direction:column; gap:6px; }
+  .pipe-stage-btn{
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-2); border:1px solid var(--line); border-radius:4px;
+    padding:9px 11px; cursor:pointer; text-align:left; color:var(--ink);
+    transition:border-color 0.12s, background 0.12s;
+  }
+  .pipe-stage-btn:hover{ border-color:var(--teal); }
+  .pipe-stage-btn.active{ border-color:var(--amber); background:#241d12; }
+  .pipe-stage-btn .stage-idx{
+    flex:0 0 auto; width:20px; height:20px; border-radius:50%; background:var(--teal); color:#0d1512;
+    font-size:0.68rem; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .pipe-stage-btn.active .stage-idx{ background:var(--amber); }
+  .pipe-stage-btn .stext strong{ display:block; font-size:0.86rem; }
+  .pipe-stage-btn .stext small{ color:var(--muted); font-size:0.72rem; }
+
+  .arch-section{ margin-top:18px; background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:18px; }
+  .arch-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+  @media (max-width:900px){ .arch-grid{ grid-template-columns:1fr; } }
+  .arch-card{ background:var(--bg-2); border:1px solid var(--line); border-radius:4px; padding:13px 14px; }
+  .arch-card .arch-era{ font-family:'IBM Plex Mono', monospace; font-size:0.68rem; color:var(--teal); margin-bottom:5px; display:block; }
+  .arch-card .arch-name{ font-weight:600; font-size:0.9rem; color:var(--paper); margin-bottom:5px; display:block; }
+  .arch-card p{ margin:0; font-size:0.8rem; line-height:1.45; color:var(--muted); }
+
+  .viewfinder-flex{ aspect-ratio:auto; min-height:560px; }
+
+  .pipe-workspace{
+    background:rgba(10,12,15,0.35); border:1px solid var(--line); border-radius:5px;
+    padding:16px; min-height:190px; display:flex; flex-direction:column; gap:12px;
+  }
+  .ws-label{ font-family:'IBM Plex Mono', monospace; font-size:0.66rem; color:var(--dim); letter-spacing:0.03em; }
+  .ws-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .ws-btn{
+    background:var(--teal); color:#0d1512; border:none; border-radius:4px;
+    padding:8px 14px; font-size:0.82rem; font-weight:600; cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .ws-btn:hover{ filter:brightness(1.08); }
+  .ws-btn.stop{ background:var(--rec); color:#fff; }
+  .ws-btn.ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+  .ws-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+  .ws-status{ font-family:'IBM Plex Mono', monospace; font-size:0.74rem; color:var(--muted); }
+  .ws-status.live{ color:var(--amber); }
+  .ws-input, .ws-textarea{
+    background:var(--bg-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:4px; padding:8px 10px; font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.86rem; flex:1; min-width:180px;
+  }
+  .ws-textarea{ width:100%; min-height:56px; resize:vertical; font-size:0.9rem; }
+  .ws-note{ font-size:0.78rem; color:var(--muted); line-height:1.5; margin:0; }
+  .ws-note.warn{ color:var(--amber); }
+  canvas.ws-canvas{ width:100%; height:130px; background:#0c0e12; border-radius:4px; display:block; }
+
+  .ws-slider-row{ display:flex; align-items:center; gap:10px; font-size:0.78rem; color:var(--muted); }
+  .ws-slider-row input[type=range]{ flex:1; accent-color:var(--teal); }
+  .ws-slider-row .val{ width:34px; text-align:right; font-family:'IBM Plex Mono', monospace; color:var(--ink); }
+
+  .ws-bars{ display:flex; align-items:center; gap:8px; }
+  .ws-bar-track{ flex:1; height:16px; background:var(--bg-2); border:1px solid var(--line); border-radius:3px; overflow:hidden; position:relative; }
+  .ws-bar-fill{ position:absolute; left:0; top:0; bottom:0; background:var(--teal); transition:width 0.25s ease; }
+  .ws-bar-label{ width:78px; font-family:'IBM Plex Mono', monospace; font-size:0.7rem; color:var(--ink); flex:0 0 auto; }
+  .ws-bar-pct{ width:38px; font-family:'IBM Plex Mono', monospace; font-size:0.7rem; color:var(--muted); text-align:right; }
+
+  .ws-suggest-list{ display:flex; flex-direction:column; gap:5px; }
+  .ws-suggest{ display:flex; align-items:center; gap:8px; cursor:pointer; padding:3px 0; }
+  .ws-suggest:hover .ws-bar-label{ color:var(--teal); }
+
+  .ws-phon-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .ws-phon-chip{ background:var(--bg-2); border:1px solid var(--line); border-radius:4px; padding:6px 9px; text-align:center; min-width:56px; }
+  .ws-phon-chip .w{ font-size:0.78rem; color:var(--ink); font-weight:600; }
+  .ws-phon-chip .p{ font-size:0.72rem; color:var(--teal); font-family:'IBM Plex Mono', monospace; }
+
+  .ws-spec-grid{ display:flex; gap:3px; flex-wrap:wrap; }
+  .ws-spec-block{
+    flex:1; min-width:26px; height:56px; background:var(--bg-2); border:1px solid var(--line);
+    border-radius:3px; display:flex; align-items:flex-end; justify-content:center;
+    font-size:0.62rem; color:var(--dim); padding-bottom:3px; transition:background 0.15s, border-color 0.15s;
+  }
+  .ws-spec-block.hot{ background:#241d12; border-color:var(--amber); color:var(--amber); }
+
+  .ws-vu{ display:flex; align-items:flex-end; gap:3px; height:40px; }
+  .ws-vu span{ width:6px; background:var(--teal); border-radius:1px; height:6px; transition:height 0.1s linear; }
+
+  .ws-example-btns{ display:flex; gap:8px; flex-wrap:wrap; }
+  .ws-example-btn{ background:var(--bg-2); border:1px solid var(--line); color:var(--muted); border-radius:20px; padding:5px 12px; font-size:0.74rem; cursor:pointer; }
+  .ws-example-btn:hover{ border-color:var(--teal); color:var(--teal); }
+
+  select.ws-select{
+    background:var(--bg-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:4px; padding:7px 9px; font-size:0.8rem; font-family:'IBM Plex Sans', sans-serif;
+  }
+
+  footer.note{ margin-top:16px; font-size:0.74rem; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); padding-top:12px; }
+  footer.note code{ background:var(--bg-2); padding:1px 6px; border-radius:3px; color:var(--teal); font-family:'IBM Plex Mono',monospace; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="masthead">
+    <div>
+      <h1>Vocal Tract Field Notes</h1>
+      <p>Two specimens, one question: how does a sound get from a mouth — or a model — into language? Dissect human articulation, then trace the same sounds through a machine's listening and speaking pipeline.</p>
+    </div>
+    <div class="rec"><span class="dot"></span> LIVE FEED · <span id="specimenTag">SPECIMEN 01</span></div>
+  </div>
+
+  <div class="mode-toggle" id="modeToggle">
+    <button class="mode-btn active" data-mode="human" type="button">
+      <span class="mode-num">01</span>
+      <span class="mode-text"><strong>Human Vocal Tract</strong><small>Articulatory phonetics, dissected</small></span>
+    </button>
+    <button class="mode-btn" data-mode="ai" type="button">
+      <span class="mode-num">02</span>
+      <span class="mode-text"><strong>Machine Listening Pipeline</strong><small>How ASR &amp; TTS systems learn the same sounds</small></span>
+    </button>
+  </div>
+
+  <div class="audio-banner" id="audioBanner">
+    Your browser can't synthesize speech, so playback is unavailable — the diagram and descriptions still work fully.
+    <button id="dismissBanner">Dismiss</button>
+  </div>
+
+  <div class="view-block" id="viewHuman">
+  <div class="stage-wrap">
+
+    <div class="viewfinder">
+      <div class="bracket tl"></div><div class="bracket tr"></div>
+      <div class="bracket bl"></div><div class="bracket br"></div>
+      <div class="slate">SAG-01 / VOCAL TRACT / MIDLINE CUT</div>
+      <div class="tcode" id="tcode">00:00:00:00</div>
+      <div class="scanline"></div>
+
+      <svg id="tract" viewBox="0 0 800 620" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="skinGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#e3b699"/>
+            <stop offset="100%" stop-color="#b98567"/>
+          </linearGradient>
+          <linearGradient id="cutGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f0c9a8"/>
+            <stop offset="100%" stop-color="#d9a67e"/>
+          </linearGradient>
+          <linearGradient id="tongueGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#dd8278"/>
+            <stop offset="100%" stop-color="#8f342f"/>
+          </linearGradient>
+          <linearGradient id="boneGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f6efe1"/>
+            <stop offset="100%" stop-color="#d8cbac"/>
+          </linearGradient>
+          <linearGradient id="pharynxGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#8f3a3a"/>
+            <stop offset="100%" stop-color="#5f2226"/>
+          </linearGradient>
+        </defs>
+
+        <!-- ===== outer head / neck silhouette (skin) ===== -->
+        <path d="M 330,46
+                 C 400,40 452,58 486,108
+                 C 512,146 528,182 552,222
+                 C 566,246 566,258 548,266
+                 C 534,272 524,282 522,298
+                 C 520,314 520,328 524,340
+                 C 528,354 522,366 508,376
+                 C 496,384 486,392 480,406
+                 C 472,424 458,432 438,432
+                 L 434,470
+                 L 434,600
+                 L 246,600
+                 L 246,452
+                 C 216,420 202,378 200,330
+                 C 198,266 206,204 226,152
+                 C 246,100 284,60 330,46 Z"
+              fill="url(#skinGrad)" stroke="#7c5a44" stroke-width="1.5" />
+
+        <!-- sectioned tissue rim: the thin band of skin/fat exposed by the midline cut -->
+        <path d="M 330,46
+                 C 400,40 452,58 486,108
+                 C 512,146 528,182 552,222
+                 C 566,246 566,258 548,266
+                 C 534,272 524,282 522,298
+                 C 520,314 520,328 524,340
+                 C 528,354 522,366 508,376
+                 C 496,384 486,392 480,406
+                 C 472,424 458,432 438,432
+                 L 246,432
+                 C 216,400 202,360 200,312
+                 C 198,250 206,196 226,148
+                 C 246,98 284,60 330,46 Z"
+              fill="none" stroke="#8a5c3e" stroke-width="7" stroke-dasharray="1.4 3.4" opacity="0.35"/>
+
+        <!-- nostril -->
+        <ellipse cx="556" cy="234" rx="7" ry="10" fill="#8a5c42" opacity="0.75" transform="rotate(20 556 234)"/>
+
+        <!-- ===== nasal cavity roof + turbinate suggestion ===== -->
+        <path d="M 548,196 C 500,176 440,168 392,176 C 356,182 322,196 300,214"
+              fill="none" stroke="#a97a5e" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+        <path d="M 470,196 C 460,204 458,214 464,222" fill="none" stroke="#a97a5e" stroke-width="2" opacity="0.4"/>
+        <path d="M 420,192 C 412,200 410,210 416,218" fill="none" stroke="#a97a5e" stroke-width="2" opacity="0.4"/>
+
+        <!-- ===== pharyngeal wall (back of throat) ===== -->
+        <path d="M 300,214
+                 C 274,238 262,270 262,300
+                 C 262,338 270,372 288,404
+                 C 296,418 300,430 300,444
+                 L 268,444
+                 C 250,410 240,372 240,332
+                 C 240,282 254,240 282,204 Z"
+              fill="url(#pharynxGrad)" stroke="#4a1c1f" stroke-width="1.2"/>
+        <path d="M 288,240 C 272,268 266,300 268,332" fill="none" stroke="#5f2226" stroke-width="1" opacity="0.5"/>
+
+        <!-- ===== hard palate (bone) ===== -->
+        <path d="M 300,214 C 340,220 380,224 412,232 C 438,238 458,248 470,262
+                 L 470,278 C 452,264 430,254 404,248 C 372,240 336,236 302,232 Z"
+              fill="url(#boneGrad)" stroke="#a99a76" stroke-width="1"/>
+
+        <!-- ===== velum / soft palate + uvula ===== -->
+        <path id="velum" d="M 300,214 C 292,226 288,240 290,254 C 292,270 300,284 312,294
+                 C 320,300 326,296 322,286 C 314,268 310,248 316,230 C 318,224 312,216 300,214 Z"
+              fill="#c97b78" stroke="#8a4744" stroke-width="1"/>
+
+        <!-- ===== upper & lower teeth (individual crowns) ===== -->
+        <g id="teethUpper" fill="url(#boneGrad)" stroke="#a99a76" stroke-width="0.7">
+          <path d="M 470,262 L 478,263 L 477,275 L 469,274 Z"/>
+          <path d="M 478,263 L 486,265 L 485,277 L 477,275 Z"/>
+          <path d="M 486,265 L 494,267 L 493,279 L 485,277 Z"/>
+          <path d="M 494,267 L 500,269 L 499,281 L 493,279 Z"/>
+        </g>
+        <g id="teethLower" fill="url(#boneGrad)" stroke="#a99a76" stroke-width="0.7">
+          <path d="M 470,333 L 478,331 L 479,343 L 471,345 Z"/>
+          <path d="M 478,331 L 486,329 L 487,341 L 479,343 Z"/>
+          <path d="M 486,329 L 494,328 L 495,339 L 487,341 Z"/>
+          <path d="M 494,328 L 500,327 L 501,338 L 495,339 Z"/>
+        </g>
+
+        <!-- ===== lips (with philtrum + vermillion border) ===== -->
+        <path d="M 502,272 L 500,282" stroke="#b98567" stroke-width="1.4" opacity="0.5" fill="none"/>
+        <path id="lipUpper" d="M 496,281 C 506,278 516,282 524,292 C 528,297 528,301 524,300
+                 C 514,296 504,293 496,293 C 493,293 493,283 496,281 Z"
+              fill="#c56a5c" stroke="#8a3f34" stroke-width="1"/>
+        <path id="lipLower" d="M 496,335 C 506,340 518,338 526,328 C 529,324 528,320 524,322
+                 C 514,327 504,329 497,328 C 493,327 493,337 496,335 Z"
+              fill="#c56a5c" stroke="#8a3f34" stroke-width="1"/>
+
+        <!-- ===== tongue (with muscle-fiber striations) ===== -->
+        <path id="tongue" d="M 480,314
+                 C 466,302 448,294 428,290
+                 C 396,284 362,285 334,296
+                 C 310,306 292,320 282,340
+                 C 274,358 274,378 286,396
+                 C 298,412 316,420 336,420
+                 C 360,420 384,412 404,398
+                 C 426,384 444,366 460,346
+                 C 468,336 474,325 480,314 Z"
+              fill="url(#tongueGrad)" stroke="#6e2b28" stroke-width="1.3"/>
+        <g fill="none" stroke="#7a2f2b" stroke-linecap="round">
+          <path d="M 470,318 C 452,310 432,304 412,301 C 380,297 348,299 322,310" stroke-width="1.3" opacity="0.55"/>
+          <path d="M 460,336 C 440,332 418,332 398,336 C 372,341 348,350 330,364" stroke-width="1.1" opacity="0.4"/>
+          <path d="M 300,392 C 314,400 330,404 346,402" stroke-width="1.2" opacity="0.45"/>
+          <path d="M 296,354 C 312,348 330,346 348,348" stroke-width="1" opacity="0.35"/>
+        </g>
+
+        <!-- ===== epiglottis ===== -->
+        <path id="epiglottis" d="M 292,392 C 284,400 280,410 282,420 C 292,414 300,406 302,396 Z"
+              fill="#c98f86" stroke="#8a4744" stroke-width="1"/>
+
+        <!-- ===== larynx / vocal folds (glottis) ===== -->
+        <g id="glottis">
+          <rect x="262" y="424" width="34" height="18" rx="3" fill="#7d8e99" stroke="#4c5960" stroke-width="1"/>
+          <line id="vfold1" x1="266" y1="430" x2="292" y2="430" stroke="#dfe6ea" stroke-width="1.6"/>
+          <line id="vfold2" x1="266" y1="436" x2="292" y2="436" stroke="#dfe6ea" stroke-width="1.6"/>
+        </g>
+
+        <!-- esophagus (posterior, behind the trachea) -->
+        <path d="M 280,444 L 280,600 L 246,600 L 246,444 Z" fill="#6b2a2c" stroke="#4a1c1f" stroke-width="1"/>
+        <!-- trachea (anterior, directly below the larynx) -->
+        <path d="M 268,442 L 302,442 C 304,480 304,540 302,600 L 270,600 C 268,540 266,480 268,442 Z"
+              fill="#8fa0ab" stroke="#5c6b74" stroke-width="1"/>
+        <g stroke="#5c6b74" stroke-width="1" opacity="0.6">
+          <line x1="268" y1="466" x2="302" y2="466"/>
+          <line x1="267" y1="496" x2="302" y2="496"/>
+          <line x1="267" y1="526" x2="302" y2="526"/>
+          <line x1="267" y1="556" x2="301" y2="556"/>
+          <line x1="267" y1="586" x2="301" y2="586"/>
+        </g>
+
+        <!-- ===== jaw contour line (for realism) ===== -->
+        <path d="M 434,432 C 460,430 480,418 492,398" fill="none" stroke="#8a6248" stroke-width="1.4" opacity="0.5"/>
+
+        <!-- ===================================================== -->
+        <!-- permanent field labels (always visible, low-key)       -->
+        <!-- ===================================================== -->
+        <g id="staticLabels">
+          <line class="static-line" x1="470" y1="150" x2="410" y2="196"/>
+          <circle class="static-dot" cx="410" cy="196" r="2"/>
+          <text class="static-label" x="474" y="153">NASAL CAVITY</text>
+
+          <line class="static-line" x1="620" y1="200" x2="440" y2="240"/>
+          <circle class="static-dot" cx="440" cy="240" r="2"/>
+          <text class="static-label" x="624" y="203">HARD PALATE</text>
+
+          <line class="static-line" x1="620" y1="222" x2="308" y2="260"/>
+          <circle class="static-dot" cx="308" cy="260" r="2"/>
+          <text class="static-label" x="624" y="225">VELUM (SOFT PALATE)</text>
+
+          <line class="static-line" x1="620" y1="244" x2="316" y2="288"/>
+          <circle class="static-dot" cx="316" cy="288" r="2"/>
+          <text class="static-label" x="624" y="247">UVULA</text>
+
+          <line class="static-line" x1="620" y1="270" x2="480" y2="270"/>
+          <circle class="static-dot" cx="480" cy="270" r="2"/>
+          <text class="static-label" x="624" y="273">ALVEOLAR RIDGE</text>
+
+          <line class="static-line" x1="640" y1="292" x2="512" y2="308"/>
+          <circle class="static-dot" cx="512" cy="308" r="2"/>
+          <text class="static-label" x="644" y="295">LIPS</text>
+
+          <line class="static-line" x1="640" y1="314" x2="485" y2="270"/>
+          <circle class="static-dot" cx="485" cy="270" r="2"/>
+          <text class="static-label" x="644" y="317">TEETH</text>
+
+          <line class="static-line" x1="620" y1="336" x2="400" y2="350"/>
+          <circle class="static-dot" cx="400" cy="350" r="2"/>
+          <text class="static-label" x="624" y="339">TONGUE (DORSUM)</text>
+
+          <line class="static-line" x1="150" y1="330" x2="252" y2="320"/>
+          <circle class="static-dot" cx="252" cy="320" r="2"/>
+          <text class="static-label" x="30" y="333">PHARYNX</text>
+
+          <line class="static-line" x1="150" y1="398" x2="288" y2="404"/>
+          <circle class="static-dot" cx="288" cy="404" r="2"/>
+          <text class="static-label" x="65" y="401">EPIGLOTTIS</text>
+
+          <line class="static-line" x1="150" y1="432" x2="262" y2="433"/>
+          <circle class="static-dot" cx="262" cy="433" r="2"/>
+          <text class="static-label" x="18" y="435">VOCAL FOLDS</text>
+
+          <line class="static-line" x1="150" y1="500" x2="268" y2="500"/>
+          <circle class="static-dot" cx="268" cy="500" r="2"/>
+          <text class="static-label" x="54" y="503">TRACHEA</text>
+
+          <line class="static-line" x1="150" y1="560" x2="248" y2="560"/>
+          <circle class="static-dot" cx="248" cy="560" r="2"/>
+          <text class="static-label" x="42" y="563">ESOPHAGUS</text>
+        </g>
+
+        <!-- dynamic highlight layer (populated by JS) -->
+        <g id="highlights"></g>
+      </svg>
+
+      <div class="caption-bar" id="captionBar">MID-SAGITTAL SECTION — PRESS A LETTER TO BEGIN</div>
+    </div>
+
+    <div class="panel">
+      <div>
+        <div class="panel-label">
+          <span>SOUNDBOARD — TAP OR USE YOUR KEYBOARD</span>
+          <span class="hint" id="kbHint">keys A–Z live</span>
+        </div>
+        <div class="keys" id="keys"></div>
+      </div>
+
+      <div id="variantWrap" style="display:none;">
+        <div class="panel-label"><span>PHONE VARIANTS</span></div>
+        <div class="variants" id="variants"></div>
+      </div>
+
+      <div class="readout" id="readout">
+        <div class="placeholder">Press any letter — on screen or on your keyboard.<br>You'll hear the sound, see where it's articulated, and (for letters like C, G, S, X, Y and the vowels) find the alternate sounds that letter can make.</div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /viewHuman -->
+
+  <div class="view-block" id="viewAI" style="display:none;">
+    <div class="stage-wrap">
+
+      <div class="viewfinder viewfinder-flex">
+        <div class="bracket tl"></div><div class="bracket tr"></div>
+        <div class="bracket bl"></div><div class="bracket br"></div>
+        <div class="slate">PIPE-02 / MACHINE LISTENING / <span id="pipeSlate">SPEECH → TEXT</span></div>
+        <div class="tcode" id="tcode2">00:00:00:00</div>
+        <div class="scanline"></div>
+
+        <div class="pipe-stage-area">
+          <div class="pipe-subtoggle" id="pipeSubtoggle">
+            <button class="pipe-sub-btn active" data-dir="asr" type="button">ASR — Speech → Text</button>
+            <button class="pipe-sub-btn" data-dir="tts" type="button">TTS — Text → Speech</button>
+          </div>
+          <div class="pipe-flow" id="pipeFlow"></div>
+          <div class="pipe-workspace" id="pipeWorkspace"></div>
+        </div>
+
+        <div class="caption-bar" id="captionBar2">SIGNAL PATH — SELECT A STAGE TO BEGIN</div>
+      </div>
+
+      <div class="panel">
+        <div>
+          <div class="panel-label">
+            <span>PIPELINE STAGES</span>
+            <span class="hint">keys 1–5 also work</span>
+          </div>
+          <div class="pipe-stage-list" id="pipeStageList"></div>
+        </div>
+
+        <div class="readout" id="pipeReadout">
+          <div class="placeholder">Select a stage to see what it does, the models associated with it, and where it sits in the signal path.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="arch-section">
+      <div class="panel-label" style="margin-bottom:10px;"><span>MODEL ARCHITECTURES — HOW ASR SYSTEMS HAVE LEARNED TO DO THIS, OVER TIME</span></div>
+      <div class="arch-grid" id="archGrid"></div>
+    </div>
+  </div><!-- /viewAI -->
+
+  <footer class="note">
+    Sounds are synthesized live by your browser's built-in speech voice (no audio files, works offline once loaded). Pronunciations reflect common General American English; several letters (C, G, N, O, Q, S, U, X, Y and every vowel) carry more than one everyday sound, each included as its own soundboard key. IPA = International Phonetic Alphabet. This is a single self-contained <code>.html</code> file — save it and open it in any browser, no install needed.
+  </footer>
+</div>
+
+<script>
+/* ===================================================================
+   Articulation point catalogue (shared across variants)
+=================================================================== */
+const PT = {
+  LIPS: {x:512,y:308,label:'LIPS'},
+  LIPS_R: {x:512,y:308,label:'LIPS ROUNDED'},
+  LIP_TEETH: {x:492,y:302,label:'LIP + TEETH'},
+  ALV: {x:472,y:270,label:'ALVEOLAR RIDGE'},
+  ALV_NC: {x:436,y:296,label:'ALVEOLAR (NO CONTACT)'},
+  POSTALV: {x:432,y:284,label:'POST-ALVEOLAR'},
+  PAL: {x:398,y:250,label:'HARD PALATE'},
+  VEL: {x:308,y:236,label:'VELUM'},
+  VEL_LOW: {x:300,y:230,label:'VELUM LOWERED'},
+  GLOT: {x:274,y:432,label:'GLOTTIS'},
+  T_LF: {x:372,y:302,label:'TONGUE · LOW-FRONT'},
+  T_MF: {x:366,y:284,label:'TONGUE · MID-FRONT'},
+  T_HF: {x:358,y:262,label:'TONGUE · HIGH-FRONT'},
+  T_GLIDE: {x:368,y:298,label:'TONGUE RISES (GLIDE)'},
+  T_CEN: {x:340,y:292,label:'TONGUE · CENTRAL'},
+  T_LB: {x:302,y:308,label:'TONGUE · LOW-BACK'},
+  T_MB: {x:298,y:272,label:'TONGUE · BACK (ROUNDED)'},
+  T_HB: {x:294,y:254,label:'TONGUE · HIGH-BACK'}
+};
+
+/* ===================================================================
+   Letter data: each letter maps to one or more articulation "variants"
+   say      -> short string fed to speech synthesis for the isolated sound
+   example  -> a real word, spoken in full for accurate pronunciation
+=================================================================== */
+const DATA = {
+A:{variants:[
+  {ipa:'æ',place:'Low front vowel',manner:'Vowel',voicing:'Voiced',example:'cat',say:'a',
+   desc:'The jaw drops and the front of the tongue stays low and forward, with an open, unobstructed vocal tract.',pts:[PT.T_LF]},
+  {ipa:'eɪ',place:'Front vowel (glide)',manner:'Diphthong',voicing:'Voiced',example:'cake',say:'ay',
+   desc:'The "long A": the tongue starts low-front and glides upward toward a higher front position as the sound is released.',pts:[PT.T_GLIDE]}
+]},
+B:{variants:[
+  {ipa:'b',place:'Bilabial',manner:'Stop',voicing:'Voiced',example:'boy',say:'buh',
+   desc:'The lips press fully closed, air pressure builds behind them, then releases in a small burst as the vocal folds vibrate.',pts:[PT.LIPS]}
+]},
+C:{variants:[
+  {ipa:'k',place:'Velar',manner:'Stop',voicing:'Voiceless',example:'cat',say:'kuh',label:'Hard C',
+   desc:'The "hard C": the back of the tongue rises to seal against the soft palate, blocking air completely before a sharp release.',pts:[PT.VEL]},
+  {ipa:'s',place:'Alveolar',manner:'Fricative',voicing:'Voiceless',example:'city',say:'sss',label:'Soft C',
+   desc:'The "soft C" (usually before e, i or y): the tongue tip narrows the passage at the alveolar ridge, forcing air through with a hiss — identical to /s/.',pts:[PT.ALV]}
+]},
+D:{variants:[
+  {ipa:'d',place:'Alveolar',manner:'Stop',voicing:'Voiced',example:'dog',say:'duh',
+   desc:'The tongue tip presses against the alveolar ridge just behind the upper teeth, stopping airflow, then releases with voicing.',pts:[PT.ALV]}
+]},
+E:{variants:[
+  {ipa:'ɛ',place:'Mid front vowel',manner:'Vowel',voicing:'Voiced',example:'bed',say:'eh',
+   desc:'The "short E": the tongue sits mid-height toward the front of the mouth, jaw partly open, lips relaxed.',pts:[PT.T_MF]},
+  {ipa:'iː',place:'High front vowel',manner:'Vowel (tense)',voicing:'Voiced',example:'me',say:'ee',
+   desc:'The "long E": the front of the tongue rises high and tenses toward the hard palate, with spread lips.',pts:[PT.T_HF]}
+]},
+F:{variants:[
+  {ipa:'f',place:'Labiodental',manner:'Fricative',voicing:'Voiceless',example:'fish',say:'ffff',
+   desc:'The lower lip touches the edge of the upper front teeth, forcing air through a narrow gap to create friction noise.',pts:[PT.LIP_TEETH]}
+]},
+G:{variants:[
+  {ipa:'g',place:'Velar',manner:'Stop',voicing:'Voiced',example:'go',say:'guh',label:'Hard G',
+   desc:'The "hard G": like /k/, the tongue back seals against the velum — but here the vocal folds vibrate through the closure.',pts:[PT.VEL]},
+  {ipa:'dʒ',place:'Post-alveolar',manner:'Affricate',voicing:'Voiced',example:'giant',say:'juh',label:'Soft G',
+   desc:'The "soft G" (usually before e, i or y): the tongue blade seals just behind the alveolar ridge, then releases slowly into a fricative — identical to J.',pts:[PT.POSTALV]}
+]},
+H:{variants:[
+  {ipa:'h',place:'Glottal',manner:'Fricative',voicing:'Voiceless',example:'hat',say:'huh',
+   desc:'The vocal folds stay open and slightly tensed, letting air rush through with light turbulence — no mouth articulation at all.',pts:[PT.GLOT]}
+]},
+I:{variants:[
+  {ipa:'ɪ',place:'High front vowel',manner:'Vowel',voicing:'Voiced',example:'bit',say:'ih',
+   desc:'The "short I": the front of the tongue rises close to the hard palate, just short of causing friction.',pts:[PT.T_HF]},
+  {ipa:'aɪ',place:'Front vowel (glide)',manner:'Diphthong',voicing:'Voiced',example:'kite',say:'eye',
+   desc:'The "long I": the tongue starts low and open, then glides quickly up toward a high-front position.',pts:[PT.T_GLIDE]}
+]},
+J:{variants:[
+  {ipa:'dʒ',place:'Post-alveolar',manner:'Affricate',voicing:'Voiced',example:'jump',say:'juh',
+   desc:'The tongue blade seals just behind the alveolar ridge, then releases slowly into a fricative, all while voiced.',pts:[PT.POSTALV]}
+]},
+K:{variants:[
+  {ipa:'k',place:'Velar',manner:'Stop',voicing:'Voiceless',example:'kite',say:'kuh',
+   desc:'The back of the tongue rises to seal against the soft palate, blocking air completely before a sharp voiceless release.',pts:[PT.VEL]}
+]},
+L:{variants:[
+  {ipa:'l',place:'Alveolar (lateral)',manner:'Lateral approximant',voicing:'Voiced',example:'lamp',say:'lll',
+   desc:'The tongue tip touches the alveolar ridge while the sides drop, letting voiced air flow around both sides of the tongue.',pts:[PT.ALV]}
+]},
+M:{variants:[
+  {ipa:'m',place:'Bilabial (nasal)',manner:'Nasal',voicing:'Voiced',example:'moon',say:'mmm',
+   desc:'The lips close as in /b/, but the soft palate drops so voiced air resonates out through the nose instead of the mouth.',pts:[PT.LIPS,PT.VEL_LOW]}
+]},
+N:{variants:[
+  {ipa:'n',place:'Alveolar (nasal)',manner:'Nasal',voicing:'Voiced',example:'net',say:'nnn',
+   desc:'The tongue tip seals at the alveolar ridge while the lowered velum redirects voiced airflow through the nasal cavity.',pts:[PT.ALV,PT.VEL_LOW]},
+  {ipa:'ŋ',place:'Velar (nasal)',manner:'Nasal',voicing:'Voiced',example:'sing',say:'ng',
+   desc:'As in "sing": the back of the tongue seals at the velum instead of the alveolar ridge, with air still escaping through the nose.',pts:[PT.VEL,PT.VEL_LOW]}
+]},
+O:{variants:[
+  {ipa:'ɒ',place:'Low back vowel',manner:'Vowel',voicing:'Voiced',example:'hot',say:'ah',
+   desc:'The "short O": the back of the tongue lowers and retracts, opening a wide back resonating chamber.',pts:[PT.T_LB]},
+  {ipa:'oʊ',place:'Back vowel (glide)',manner:'Diphthong',voicing:'Voiced',example:'go',say:'oh',
+   desc:'The "long O": the tongue body sits mid-back while the lips round, gently gliding toward a higher, rounder position.',pts:[PT.T_MB,PT.LIPS_R]}
+]},
+P:{variants:[
+  {ipa:'p',place:'Bilabial',manner:'Stop',voicing:'Voiceless',example:'pen',say:'puh',
+   desc:'The lips press fully closed and pressure builds, then releases as a voiceless burst with no vocal fold vibration.',pts:[PT.LIPS]}
+]},
+Q:{variants:[
+  {ipa:'kw',place:'Velar + Labial',manner:'Stop + rounding blend',voicing:'Voiceless',example:'queen',say:'kwuh',
+   desc:'Almost always paired with "u": the tongue back seals at the velum for /k/, released straight into rounded lips for a /w/ glide.',pts:[PT.VEL,PT.LIPS_R]}
+]},
+R:{variants:[
+  {ipa:'ɹ',place:'Alveolar (approximant)',manner:'Approximant',voicing:'Voiced',example:'red',say:'rrr',
+   desc:'The tongue tip curls up near, but never touching, the alveolar ridge, narrowing the tract just enough to colour the sound.',pts:[PT.ALV_NC]}
+]},
+S:{variants:[
+  {ipa:'s',place:'Alveolar',manner:'Fricative',voicing:'Voiceless',example:'sun',say:'sss',label:'Voiceless S',
+   desc:'The tongue tip approaches the alveolar ridge, leaving a narrow channel that forces air through with a sharp hiss.',pts:[PT.ALV]},
+  {ipa:'z',place:'Alveolar',manner:'Fricative',voicing:'Voiced',example:'rose',say:'zzz',label:'Voiced S',
+   desc:'The same narrow channel as /s/, but the vocal folds vibrate — common when S sits between vowels or marks a plural.',pts:[PT.ALV]}
+]},
+T:{variants:[
+  {ipa:'t',place:'Alveolar',manner:'Stop',voicing:'Voiceless',example:'top',say:'tuh',
+   desc:'The tongue tip presses firmly against the alveolar ridge, blocking air completely before a crisp voiceless release.',pts:[PT.ALV]}
+]},
+U:{variants:[
+  {ipa:'ʌ',place:'Central vowel',manner:'Vowel',voicing:'Voiced',example:'cup',say:'uh',
+   desc:'The "short U": the tongue rests in a relaxed, mid-central position, roughly halfway between front and back.',pts:[PT.T_CEN]},
+  {ipa:'juː',place:'Palatal glide + back vowel',manner:'Glide + vowel',voicing:'Voiced',example:'cute',say:'yoo',
+   desc:'The "long U": a quick /j/ glide at the hard palate leads into a high, rounded back vowel.',pts:[PT.PAL,PT.T_HB]}
+]},
+V:{variants:[
+  {ipa:'v',place:'Labiodental',manner:'Fricative',voicing:'Voiced',example:'van',say:'vvv',
+   desc:'The lower lip touches the upper teeth as in /f/, but the vocal folds vibrate through the friction.',pts:[PT.LIP_TEETH]}
+]},
+W:{variants:[
+  {ipa:'w',place:'Labio-velar',manner:'Approximant',voicing:'Voiced',example:'win',say:'wuh',
+   desc:'The lips round and narrow while the back of the tongue simultaneously rises toward the velum — two places at once.',pts:[PT.LIPS_R,PT.VEL]}
+]},
+X:{variants:[
+  {ipa:'ks',place:'Velar + Alveolar',manner:'Stop + Fricative blend',voicing:'Voiceless',example:'box',say:'ks',label:'Voiceless X',
+   desc:'A blend of two sounds in sequence: a /k/ closure at the velum immediately followed by an /s/ hiss at the alveolar ridge.',pts:[PT.VEL,PT.ALV]},
+  {ipa:'gz',place:'Velar + Alveolar',manner:'Stop + Fricative blend',voicing:'Voiced',example:'exam',say:'gz',label:'Voiced X',
+   desc:'The same two-place blend as /ks/, but voiced throughout — common when X sits between two vowels.',pts:[PT.VEL,PT.ALV]}
+]},
+Y:{variants:[
+  {ipa:'j',place:'Palatal',manner:'Approximant',voicing:'Voiced',example:'yes',say:'yuh',label:'Consonant Y',
+   desc:'The front of the tongue rises close to the hard palate without touching it, gliding quickly into the following vowel.',pts:[PT.PAL]},
+  {ipa:'ɪ',place:'High front vowel',manner:'Vowel',voicing:'Voiced',example:'gym',say:'ih',label:'Vowel Y',
+   desc:'When Y acts as a vowel, it behaves just like a short I: the tongue front rises toward the hard palate.',pts:[PT.T_HF]}
+]},
+Z:{variants:[
+  {ipa:'z',place:'Alveolar',manner:'Fricative',voicing:'Voiced',example:'zoo',say:'zzz',
+   desc:'The tongue tip narrows the passage at the alveolar ridge as with /s/, but the vocal folds vibrate throughout.',pts:[PT.ALV]}
+]}
+};
+
+/* ===================================================================
+   Speech synthesis
+=================================================================== */
+let voicesReady = false;
+let chosenVoice = null;
+function pickVoice(){
+  if(!('speechSynthesis' in window)) return;
+  const voices = speechSynthesis.getVoices();
+  chosenVoice = voices.find(v=>/en-US|en_US/i.test(v.lang) && /female|Samantha|Zira|Google US/i.test(v.name))
+             || voices.find(v=>/^en/i.test(v.lang))
+             || voices[0] || null;
+  voicesReady = true;
+}
+if('speechSynthesis' in window){
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+} else {
+  document.getElementById('audioBanner').classList.add('show');
+}
+document.getElementById('dismissBanner').addEventListener('click',()=>{
+  document.getElementById('audioBanner').classList.remove('show');
+});
+
+let voicingTimer = null;
+function speak(text, rate){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = rate || 0.85;
+  u.pitch = 1.0;
+  if(chosenVoice) u.voice = chosenVoice;
+  const vfold1 = document.getElementById('vfold1');
+  const vfold2 = document.getElementById('vfold2');
+  clearInterval(voicingTimer);
+  u.onstart = ()=>{
+    vfold1.classList.add('voicing-pulse');
+    vfold2.classList.add('voicing-pulse');
+  };
+  u.onend = u.onerror = ()=>{
+    vfold1.classList.remove('voicing-pulse');
+    vfold2.classList.remove('voicing-pulse');
+  };
+  speechSynthesis.speak(u);
+}
+
+/* ===================================================================
+   UI wiring
+=================================================================== */
+const keysEl = document.getElementById('keys');
+const variantWrap = document.getElementById('variantWrap');
+const variantsEl = document.getElementById('variants');
+const readoutEl = document.getElementById('readout');
+const highlightsEl = document.getElementById('highlights');
+const captionEl = document.getElementById('captionBar');
+
+let currentLetter = null;
+let currentIndex = 0;
+const letterButtons = {};
+
+Object.keys(DATA).forEach(letter=>{
+  const btn = document.createElement('button');
+  btn.textContent = letter;
+  if(DATA[letter].variants.length > 1){
+    const badge = document.createElement('span');
+    badge.className = 'n-badge';
+    badge.textContent = DATA[letter].variants.length;
+    btn.appendChild(badge);
+  }
+  btn.addEventListener('click', ()=>selectLetter(letter, true));
+  keysEl.appendChild(btn);
+  letterButtons[letter] = btn;
+});
+
+function drawHighlights(pts){
+  highlightsEl.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  pts.forEach((p,i)=>{
+    const g = document.createElementNS(ns,'g');
+    const labelX = p.x > 400 ? p.x + 46 : p.x - 46;
+
+    const line = document.createElementNS(ns,'line');
+    line.setAttribute('x1', p.x); line.setAttribute('y1', p.y);
+    line.setAttribute('x2', labelX); line.setAttribute('y2', p.y - 34 - i*2);
+    line.setAttribute('class','hl-line');
+    g.appendChild(line);
+
+    const ring = document.createElementNS(ns,'circle');
+    ring.setAttribute('cx',p.x); ring.setAttribute('cy',p.y); ring.setAttribute('r',7);
+    ring.setAttribute('class','hl-ring');
+    g.appendChild(ring);
+
+    const core = document.createElementNS(ns,'circle');
+    core.setAttribute('cx',p.x); core.setAttribute('cy',p.y); core.setAttribute('r',4.5);
+    core.setAttribute('class','hl-core');
+    g.appendChild(core);
+
+    const text = document.createElementNS(ns,'text');
+    text.setAttribute('x', labelX + (p.x>400 ? 4 : -4));
+    text.setAttribute('y', p.y - 38 - i*2);
+    text.setAttribute('text-anchor', p.x>400 ? 'start':'end');
+    text.setAttribute('class','hl-label');
+    text.textContent = p.label;
+    g.appendChild(text);
+
+    highlightsEl.appendChild(g);
+  });
+}
+
+function renderVariantButtons(letter){
+  const variants = DATA[letter].variants;
+  variantsEl.innerHTML = '';
+  if(variants.length < 2){ variantWrap.style.display = 'none'; return; }
+  variantWrap.style.display = 'block';
+  variants.forEach((v,i)=>{
+    const b = document.createElement('button');
+    b.className = 'variant-btn' + (i===currentIndex ? ' active' : '');
+    b.innerHTML = `<span class="play-ico">▶</span>
+      <span class="vtext">
+        <span class="vipa">/${v.ipa}/</span> &nbsp;
+        <span class="vplace">${v.label ? v.label + ' · ' : ''}${v.place}</span>
+      </span>
+      <span class="vword">"${v.example}"</span>`;
+    b.addEventListener('click', ()=>selectVariant(letter, i, true));
+    variantsEl.appendChild(b);
+  });
+}
+
+function selectVariant(letter, index, playAudio){
+  currentIndex = index;
+  const v = DATA[letter].variants[index];
+
+  document.querySelectorAll('.variant-btn').forEach((el,i)=>el.classList.toggle('active', i===index));
+
+  drawHighlights(v.pts);
+  captionEl.textContent = `/${v.ipa}/ — ${v.place.toUpperCase()} · ${v.manner.toUpperCase()}`;
+
+  readoutEl.innerHTML = `
+    <div class="letter-row">
+      <div class="big-letter">${letter}${letter.toLowerCase()}</div>
+      <div class="ipa">/${v.ipa}/${v.label ? ' — ' + v.label : ''}</div>
+    </div>
+    <div class="tags">
+      <span class="tag place">${v.place}</span>
+      <span class="tag manner">${v.manner}</span>
+      <span class="tag">${v.voicing}</span>
+    </div>
+    <p class="desc">${v.desc}</p>
+    <div class="example-row">As in <b>${v.example}</b>
+      <button class="word-btn" id="wordBtn" type="button">🔊 hear word</button>
+    </div>
+  `;
+  document.getElementById('wordBtn').addEventListener('click', ()=>speak(v.example, 0.82));
+
+  if(playAudio) speak(v.say, 0.75);
+}
+
+function selectLetter(letter, playAudio){
+  currentLetter = letter;
+  currentIndex = 0;
+  Object.values(letterButtons).forEach(b=>b.classList.remove('active'));
+  letterButtons[letter].classList.add('active');
+  renderVariantButtons(letter);
+  selectVariant(letter, 0, playAudio);
+}
+
+/* physical keyboard support (letters only apply in the Human specimen) */
+document.addEventListener('keydown', (e)=>{
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(currentMode !== 'human') return;
+  const letter = e.key.toUpperCase();
+  if(DATA[letter]){
+    e.preventDefault();
+    selectLetter(letter, true);
+  }
+});
+
+/* timecode ticker for documentary feel (drives both specimens' readouts) */
+let frame = 0;
+setInterval(()=>{
+  frame++;
+  const totalFrames = frame % 24;
+  const totalSeconds = Math.floor(frame/24) % 60;
+  const totalMinutes = Math.floor(frame/24/60) % 60;
+  const pad = n => String(n).padStart(2,'0');
+  const stamp = `00:${pad(totalMinutes)}:${pad(totalSeconds)}:${pad(totalFrames)}`;
+  document.getElementById('tcode').textContent = stamp;
+  const t2 = document.getElementById('tcode2');
+  if(t2) t2.textContent = stamp;
+}, 1000/24);
+
+/* ===================================================================
+   SPECIMEN 02 — Machine Listening Pipeline (ASR / TTS)
+=================================================================== */
+const ICONS = {
+  wave: `<div class="icon-wave"><span style="height:6px"></span><span style="height:14px"></span><span style="height:22px"></span><span style="height:10px"></span><span style="height:18px"></span><span style="height:8px"></span></div>`,
+  spec: `<div class="icon-spec">${Array.from({length:15}).map((_,i)=>`<span style="opacity:${0.3+((i*37)%70)/100}"></span>`).join('')}</div>`,
+  net: `<div class="icon-net">
+      <span style="left:0;top:2px"></span><span style="left:0;top:16px"></span>
+      <span style="left:13px;top:9px"></span><span style="left:13px;top:20px"></span>
+      <span style="left:26px;top:2px"></span><span style="left:26px;top:16px"></span>
+    </div>`,
+  funnel: `<div class="icon-funnel"></div>`,
+  text: `<div class="icon-text"><span style="width:100%"></span><span style="width:70%"></span><span style="width:85%"></span></div>`
+};
+
+const ASR_STAGES = [
+  {name:'Raw Waveform', term:'Time-domain signal', icon:'wave',
+   desc:'Microphone input as raw amplitude values over time — thousands of samples per second, with no linguistic structure imposed yet.'},
+  {name:'Feature Extraction', term:'Mel-spectrogram / MFCCs', icon:'spec',
+   desc:'The waveform is converted into a time-frequency representation — typically a mel-spectrogram or Mel-Frequency Cepstral Coefficients — compressing raw audio into features that emphasize what the human ear is sensitive to.'},
+  {name:'Acoustic Model', term:'CNN / RNN / Transformer encoder', icon:'net',
+   desc:'A neural network maps short frames of audio features to probability distributions over phonemes or sub-word units. Older systems used Hidden Markov Models with Gaussian Mixture Models (HMM-GMM); modern systems use deep neural encoders.'},
+  {name:'Decoder + Language Model', term:'Beam search / CTC / attention', icon:'funnel',
+   desc:'A search algorithm combines the acoustic model\u2019s frame-by-frame predictions with a language model\u2019s knowledge of likely word sequences, resolving ambiguity the audio alone can\u2019t (e.g. "recognize speech" vs. "wreck a nice beach").'},
+  {name:'Text Output', term:'Transcript', icon:'text',
+   desc:'The final decoded word sequence — the same kind of text a large language model would then tokenize and process further.'}
+];
+
+const TTS_STAGES = [
+  {name:'Text Input', term:'Raw text', icon:'text',
+   desc:'The sentence to be spoken, exactly as written — including punctuation, numbers, and abbreviations that still need to be resolved before pronunciation.'},
+  {name:'Normalization + G2P', term:'Grapheme-to-Phoneme', icon:'net',
+   desc:'Numbers and abbreviations are expanded ("Dr." \u2192 "Doctor"), then each word is converted into its phoneme sequence — the same letter-to-sound mapping this whole project visualizes by hand.'},
+  {name:'Acoustic Model', term:'Tacotron / FastSpeech-style', icon:'spec',
+   desc:'A neural network predicts a mel-spectrogram — the target sound\u2019s time-frequency shape — from the phoneme sequence, including duration, pitch, and stress.'},
+  {name:'Vocoder', term:'WaveNet / HiFi-GAN-style', icon:'funnel',
+   desc:'A second neural network converts the predicted spectrogram back into an actual audio waveform — turning a visual sound-shape into something you can hear.'},
+  {name:'Audio Output', term:'Synthesized speech', icon:'wave',
+   desc:'The waveform sent to your speakers — conceptually the same job your browser\u2019s speech engine is doing every time you press a key on the Specimen 01 soundboard.'}
+];
+
+const ARCHITECTURES = [
+  {era:'1980s – 2000s', name:'HMM-GMM', desc:'Hidden Markov Models handled timing; Gaussian Mixture Models scored each acoustic frame. The dominant approach for two decades.'},
+  {era:'2010s', name:'DNN-HMM Hybrid', desc:'Deep neural networks replaced GMMs for scoring frames, while HMMs still modeled timing \u2014 a major accuracy jump over the classic approach.'},
+  {era:'2014 – 2018', name:'End-to-End (CTC / Seq2Seq)', desc:'Connectionist Temporal Classification and attention-based sequence-to-sequence models learned to map audio directly to text, with no separate alignment step.'},
+  {era:'2018 – 2020', name:'RNN-Transducer', desc:'A streaming-friendly end-to-end architecture that predicts text incrementally as audio arrives \u2014 used in many on-device voice assistants.'},
+  {era:'2020 – 2021', name:'Self-Supervised Pretraining', desc:'Models like wav2vec 2.0 and HuBERT learn general audio representations from unlabeled speech first, then fine-tune on a small labeled dataset.'},
+  {era:'2022 – present', name:'Large Transformer Models', desc:'Models like Whisper train one encoder-decoder Transformer on hundreds of thousands of hours of weakly-labeled multilingual audio, unifying transcription, translation and language ID.'}
+];
+
+let pipeDirection = 'asr';
+let pipeIndex = 0;
+
+function currentStages(){ return pipeDirection === 'asr' ? ASR_STAGES : TTS_STAGES; }
+
+function renderPipeFlow(){
+  const flow = document.getElementById('pipeFlow');
+  flow.innerHTML = '';
+  currentStages().forEach((s,i)=>{
+    if(i>0){
+      const arrow = document.createElement('div');
+      arrow.className = 'pipe-arrow';
+      arrow.textContent = '\u2192';
+      flow.appendChild(arrow);
+    }
+    const box = document.createElement('div');
+    box.className = 'pipe-box' + (i===pipeIndex ? ' active' : '');
+    box.id = 'pipeBox' + i;
+    box.innerHTML = `<div class="pipe-icon">${ICONS[s.icon]}</div>
+      <div class="pipe-name">${s.name}</div>
+      <div class="pipe-term">${s.term}</div>`;
+    box.addEventListener('click', ()=>selectPipeStage(i, true));
+    flow.appendChild(box);
+  });
+}
+
+function renderPipeStageList(){
+  const list = document.getElementById('pipeStageList');
+  list.innerHTML = '';
+  currentStages().forEach((s,i)=>{
+    const b = document.createElement('button');
+    b.className = 'pipe-stage-btn' + (i===pipeIndex ? ' active' : '');
+    b.innerHTML = `<span class="stage-idx">${i+1}</span>
+      <span class="stext"><strong>${s.name}</strong><small>${s.term}</small></span>`;
+    b.addEventListener('click', ()=>selectPipeStage(i, true));
+    list.appendChild(b);
+  });
+}
+
+/* ===================================================================
+   Shared interactive state
+=================================================================== */
+let workspaceCleanup = null;
+
+// ASR (microphone + live recognition)
+let asrAudioCtx = null, asrAnalyser = null, asrMicStream = null, asrMicActive = false;
+let asrRecognition = null, asrRecognizing = false, asrInterimText = '', asrFinalText = '';
+
+// TTS (text + synthesis parameters)
+let ttsInputText = 'Dr. Smith bought 3 apples & 2 oranges.';
+let ttsRate = 0.95, ttsPitch = 1.0, ttsVoice = null;
+
+/* ---- microphone capture ---- */
+function startMicCapture(onReady, onError){
+  if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){ onError('unsupported'); return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    asrMicStream = stream;
+    asrAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const source = asrAudioCtx.createMediaStreamSource(stream);
+    asrAnalyser = asrAudioCtx.createAnalyser();
+    asrAnalyser.fftSize = 2048;
+    source.connect(asrAnalyser);
+    asrMicActive = true;
+    onReady();
+  }).catch(err=>{ onError(err && err.name ? err.name : 'error'); });
+}
+function stopMicCapture(){
+  if(asrMicStream){ asrMicStream.getTracks().forEach(t=>t.stop()); }
+  if(asrAudioCtx){ try{ asrAudioCtx.close(); }catch(e){} }
+  asrMicStream = null; asrAudioCtx = null; asrAnalyser = null; asrMicActive = false;
+}
+
+/* ---- real browser speech recognition (Chrome/Edge/Safari) ---- */
+function startRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR || asrRecognition) return;
+  asrRecognition = new SR();
+  asrRecognition.continuous = true;
+  asrRecognition.interimResults = true;
+  asrRecognition.lang = 'en-US';
+  asrRecognition.onresult = (e)=>{
+    let interim = '', final = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t = e.results[i][0].transcript;
+      if(e.results[i].isFinal) final += t + ' '; else interim += t;
+    }
+    if(final) asrFinalText += final;
+    asrInterimText = interim;
+  };
+  asrRecognition.onerror = ()=>{};
+  asrRecognition.onend = ()=>{ asrRecognizing = false; asrRecognition = null; };
+  try{ asrRecognition.start(); asrRecognizing = true; }catch(e){ asrRecognition = null; }
+}
+function stopRecognition(){
+  if(asrRecognition){ try{ asrRecognition.stop(); }catch(e){} }
+  asrRecognizing = false; asrRecognition = null;
+}
+function stopAsrEverything(){ stopMicCapture(); stopRecognition(); }
+
+/* ---- tiny, real bigram language model (used by the Decoder stage) ---- */
+const BIGRAMS = {
+  'i': {scream:0.35, am:0.25, think:0.15, love:0.1, want:0.15},
+  'ice': {cream:0.7, cold:0.15, cube:0.1, age:0.05},
+  'scream': {for:0.3, loudly:0.2, at:0.2, because:0.3},
+  'cream': {cheese:0.2, pie:0.15, soda:0.1, and:0.3, cake:0.25},
+  'the': {quick:0.2, cat:0.1, dog:0.1, weather:0.1, best:0.15, same:0.1, first:0.15, other:0.1},
+  'quick': {brown:0.6, fox:0.2, way:0.2},
+  'brown': {fox:0.8, bear:0.1, bread:0.1},
+  'fox': {jumps:0.5, ran:0.3, is:0.2},
+  'jumps': {over:0.7, into:0.2, up:0.1},
+  'over': {the:0.9, there:0.1},
+  'lazy': {dog:0.9, cat:0.1},
+  'dog': {barks:0.3, runs:0.2, sleeps:0.2, is:0.3},
+  'a': {lot:0.2, cat:0.1, dog:0.1, good:0.2, new:0.2, few:0.2},
+  'good': {morning:0.3, idea:0.2, day:0.2, boy:0.15, one:0.15},
+  'how': {are:0.5, is:0.2, do:0.3},
+  'are': {you:0.8, we:0.2},
+  'you': {doing:0.3, going:0.2, want:0.2, like:0.2, are:0.1},
+  'thank': {you:0.95, god:0.05}
+};
+function predictNext(word){
+  const t = BIGRAMS[(word||'').toLowerCase()];
+  return t ? Object.entries(t).sort((a,b)=>b[1]-a[1]) : [];
+}
+
+/* ---- text normalization + toy grapheme-to-phoneme (used by TTS stages) ---- */
+function numberToWords(n){
+  const ones=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+  const tens=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+  function chunk(num){
+    let s='';
+    if(num>=100){ s += ones[Math.floor(num/100)]+' hundred '; num%=100; }
+    if(num>=20){ s += tens[Math.floor(num/10)]+' '; num%=10; }
+    if(num>0){ s += ones[num]+' '; }
+    return s.trim();
+  }
+  if(n===0) return 'zero';
+  if(n<0) return 'negative ' + numberToWords(-n);
+  let parts=[];
+  const billions=Math.floor(n/1e9); n%=1e9;
+  const millions=Math.floor(n/1e6); n%=1e6;
+  const thousands=Math.floor(n/1e3); n%=1e3;
+  if(billions) parts.push(chunk(billions)+' billion');
+  if(millions) parts.push(chunk(millions)+' million');
+  if(thousands) parts.push(chunk(thousands)+' thousand');
+  if(n || parts.length===0) parts.push(chunk(n));
+  return parts.join(' ').trim();
+}
+function normalizeText(text){
+  let t = text || '';
+  t = t.replace(/Dr\./gi,'Doctor').replace(/Mrs\./gi,'Missus').replace(/Mr\./gi,'Mister').replace(/Ms\./gi,'Miz')
+       .replace(/St\./gi,'Street').replace(/e\.g\./gi,'for example').replace(/etc\./gi,'et cetera')
+       .replace(/&/g,' and ').replace(/%/g,' percent').replace(/\$/g,' dollars ').replace(/@/g,' at ');
+  t = t.replace(/\d+/g, m => numberToWords(parseInt(m,10)));
+  return t.replace(/\s+/g,' ').trim();
+}
+const DIGRAPHS = [['sh','ʃ'],['ch','tʃ'],['th','θ'],['ph','f'],['ng','ŋ'],['qu','kw'],['ck','k']];
+function wordToPhonemes(word){
+  const w = (word||'').toLowerCase().replace(/[^a-z]/g,'');
+  if(!w) return '';
+  const map = {a:'æ',e:'ɛ',i:'ɪ',o:'ɒ',u:'ʌ',c:'k',j:'dʒ',y:'j',x:'ks',q:'k'};
+  let out='', i=0;
+  while(i<w.length){
+    let matched=false;
+    for(const [d,p] of DIGRAPHS){ if(w.slice(i,i+d.length)===d){ out+=p; i+=d.length; matched=true; break; } }
+    if(matched) continue;
+    out += map[w[i]] || w[i]; i++;
+  }
+  return out;
+}
+
+/* ---- shared TTS playback that reports live word-boundary timing ---- */
+function speakForVisual(text, onWordBoundary, onEnd){
+  if(!('speechSynthesis' in window)){ onEnd && onEnd(); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = ttsRate; u.pitch = ttsPitch;
+  if(ttsVoice) u.voice = ttsVoice;
+  const words = text.split(/\s+/).filter(Boolean);
+  let idxMap = [], pos = 0;
+  words.forEach((w,i)=>{ const start = text.indexOf(w,pos); idxMap.push({start,i}); pos = start+w.length; });
+  u.onboundary = (e)=>{
+    if(e.name && e.name!=='word') return;
+    let wi = 0;
+    for(let k=0;k<idxMap.length;k++){ if(idxMap[k].start<=e.charIndex) wi = idxMap[k].i; }
+    onWordBoundary && onWordBoundary(wi);
+  };
+  u.onend = ()=>{ onEnd && onEnd(); };
+  u.onerror = ()=>{ onEnd && onEnd(); };
+  speechSynthesis.speak(u);
+}
+
+/* ---- simulated waveform for the no-mic fallback ---- */
+function animateSimWave(ctx, canvas, text){
+  let t = 0;
+  const seed = text.split('').reduce((a,c)=>a+c.charCodeAt(0),0) || 1;
+  (function frame(){
+    t += 0.05;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle = '#e2a444'; ctx.lineWidth = 2; ctx.beginPath();
+    for(let x=0;x<canvas.width;x++){
+      const freq = 0.02 + (seed%7)*0.003;
+      const y = canvas.height/2 + Math.sin(x*freq + t*4)*18*Math.sin(t*2) + Math.sin(x*freq*2.3 + t*3)*8;
+      if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    if(t<6) requestAnimationFrame(frame);
+  })();
+}
+
+/* ===================================================================
+   Per-stage interactive workspace builders
+=================================================================== */
+function buildAsrWave(container){
+  container.innerHTML = `
+    <div class="ws-label">LIVE INPUT</div>
+    <div class="ws-row">
+      <button id="micToggleBtn" class="ws-btn">🎙️ Start Microphone</button>
+      <span class="ws-status" id="micStat">Idle</span>
+    </div>
+    <canvas id="waveCanvas" class="ws-canvas"></canvas>
+    <div id="waveFallbackWrap" style="display:none;">
+      <p class="ws-note warn" id="waveFallbackMsg"></p>
+      <div class="ws-row">
+        <input type="text" id="waveTypeInput" class="ws-input" placeholder="Type a word or phrase, then Simulate...">
+        <button id="waveSimBtn" class="ws-btn ghost">Simulate Waveform</button>
+      </div>
+    </div>
+    <p class="ws-note">This is the actual amplitude of sound entering the system — no linguistic meaning has been extracted yet.</p>
+  `;
+  const canvas = container.querySelector('#waveCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+  let raf = null;
+  function drawLive(){
+    if(!asrAnalyser) return;
+    const len = asrAnalyser.fftSize;
+    const data = new Uint8Array(len);
+    asrAnalyser.getByteTimeDomainData(data);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle = '#e2a444'; ctx.lineWidth = 2; ctx.beginPath();
+    const slice = canvas.width/len; let x=0;
+    for(let i=0;i<len;i++){ const y=(data[i]/128.0)*canvas.height/2; if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); x+=slice; }
+    ctx.stroke();
+    raf = requestAnimationFrame(drawLive);
+  }
+  function updateUI(){
+    const btn = container.querySelector('#micToggleBtn'), stat = container.querySelector('#micStat');
+    if(!btn) return;
+    btn.textContent = asrMicActive ? '⏹ Stop Microphone' : '🎙️ Start Microphone';
+    btn.classList.toggle('stop', asrMicActive);
+    stat.textContent = asrMicActive ? 'Listening live…' : 'Idle';
+    stat.classList.toggle('live', asrMicActive);
+  }
+  container.querySelector('#micToggleBtn').addEventListener('click', ()=>{
+    if(asrMicActive){ stopAsrEverything(); updateUI(); if(raf) cancelAnimationFrame(raf); return; }
+    startMicCapture(()=>{ updateUI(); raf = requestAnimationFrame(drawLive); startRecognition(); },
+      (errType)=>{
+        container.querySelector('#waveFallbackWrap').style.display='block';
+        container.querySelector('#waveFallbackMsg').textContent = errType==='unsupported'
+          ? 'Microphone access isn\u2019t available in this browser/context (needs https or localhost).'
+          : 'Microphone permission was denied.';
+        container.querySelector('#micToggleBtn').disabled = true;
+      });
+  });
+  container.querySelector('#waveSimBtn').addEventListener('click', ()=>{
+    animateSimWave(ctx, canvas, container.querySelector('#waveTypeInput').value || 'hello');
+  });
+  if(asrMicActive){ updateUI(); raf = requestAnimationFrame(drawLive); }
+  workspaceCleanup = ()=>{ if(raf) cancelAnimationFrame(raf); };
+}
+
+function buildAsrSpec(container){
+  container.innerHTML = `
+    <div class="ws-label">FREQUENCY ANALYSIS</div>
+    <div class="ws-row">
+      <button id="micToggleBtn2" class="ws-btn">🎙️ Start Microphone</button>
+      <span class="ws-status" id="micStat2">Idle</span>
+    </div>
+    <canvas id="specCanvas" class="ws-canvas"></canvas>
+    <p class="ws-note">Each column is one instant in time; brighter cells mark frequencies carrying more energy — this time-frequency view is what a real acoustic model actually reads, not the raw waveform.</p>
+  `;
+  const canvas = container.querySelector('#specCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+  ctx.fillStyle = '#0c0e12'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  let raf = null;
+  function drawFrame(){
+    if(!asrAnalyser) return;
+    const bufferLength = asrAnalyser.frequencyBinCount;
+    const data = new Uint8Array(bufferLength);
+    asrAnalyser.getByteFrequencyData(data);
+    const img = ctx.getImageData(1,0,canvas.width-1,canvas.height);
+    ctx.putImageData(img,0,0);
+    for(let y=0;y<canvas.height;y++){
+      const idx = Math.floor((y/canvas.height)*bufferLength);
+      const v = data[bufferLength-1-idx] || 0;
+      const hue = 165 - (v/255)*120;
+      ctx.fillStyle = `hsl(${hue}, 70%, ${18+(v/255)*42}%)`;
+      ctx.fillRect(canvas.width-1, canvas.height-1-y, 1, 1);
+    }
+    raf = requestAnimationFrame(drawFrame);
+  }
+  function updateUI(){
+    const btn = container.querySelector('#micToggleBtn2'), stat = container.querySelector('#micStat2');
+    if(!btn) return;
+    btn.textContent = asrMicActive ? '⏹ Stop Microphone' : '🎙️ Start Microphone';
+    btn.classList.toggle('stop', asrMicActive);
+    stat.textContent = asrMicActive ? 'Listening live…' : 'Idle';
+    stat.classList.toggle('live', asrMicActive);
+  }
+  container.querySelector('#micToggleBtn2').addEventListener('click', ()=>{
+    if(asrMicActive){ stopAsrEverything(); updateUI(); if(raf) cancelAnimationFrame(raf); return; }
+    startMicCapture(()=>{ updateUI(); raf = requestAnimationFrame(drawFrame); startRecognition(); },
+      ()=>{ container.querySelector('#micStat2').textContent = 'Mic unavailable — try Stage 1 for a typed fallback.'; });
+  });
+  if(asrMicActive){ updateUI(); raf = requestAnimationFrame(drawFrame); }
+  workspaceCleanup = ()=>{ if(raf) cancelAnimationFrame(raf); };
+}
+
+function buildAsrAcoustic(container){
+  const srSupported = ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
+  container.innerHTML = `
+    <div class="ws-label">LIVE DECODER HYPOTHESIS ${srSupported ? '' : '(live recognition unsupported in this browser)'}</div>
+    <div class="ws-row"><div id="liveHypo" style="min-height:24px;font-size:0.95rem;">Start the microphone on Stage 1 or 2 to see live hypotheses here.</div></div>
+    <div class="ws-label" style="margin-top:10px;">ILLUSTRATIVE PHONEME CONFIDENCE <span style="color:var(--dim)">(simulated — real models use trained neural weights)</span></div>
+    <div class="ws-row"><input type="text" id="acousticWord" class="ws-input" placeholder="Type a word to simulate..." value="cat"></div>
+    <div class="ws-slider-row"><span>Noise</span><input type="range" id="noiseSlider" min="0" max="100" value="15"><span class="val" id="noiseVal">15%</span></div>
+    <div id="confBars" style="display:flex;flex-direction:column;gap:6px;"></div>
+  `;
+  function renderConfidence(){
+    const word = (container.querySelector('#acousticWord').value || 'cat').toLowerCase();
+    const noise = parseInt(container.querySelector('#noiseSlider').value,10);
+    container.querySelector('#noiseVal').textContent = noise + '%';
+    const seed = word.split('').reduce((a,c)=>a+c.charCodeAt(0),1);
+    const rand = n => (Math.sin(seed*99+n*13)+1)/2;
+    const candidates = ['/'+(word[0]||'k')+'/ (target)', '/'+(word[1]||'æ')+'/', 'noise floor'];
+    let vals = [0.75-noise/200, 0.15+noise/400, 0.10+noise/300].map((v,i)=>Math.max(0.02, v+(rand(i)-0.5)*(noise/250)));
+    const sum = vals.reduce((a,b)=>a+b,0); vals = vals.map(v=>v/sum);
+    container.querySelector('#confBars').innerHTML = candidates.map((c,i)=>`
+      <div class="ws-bars">
+        <span class="ws-bar-label">${c}</span>
+        <div class="ws-bar-track"><div class="ws-bar-fill" style="width:${(vals[i]*100).toFixed(0)}%"></div></div>
+        <span class="ws-bar-pct">${(vals[i]*100).toFixed(0)}%</span>
+      </div>`).join('');
+  }
+  container.querySelector('#acousticWord').addEventListener('input', renderConfidence);
+  container.querySelector('#noiseSlider').addEventListener('input', renderConfidence);
+  renderConfidence();
+  const poll = setInterval(()=>{
+    const el = container.querySelector('#liveHypo');
+    if(!el) return;
+    if(asrRecognizing || asrFinalText){
+      el.innerHTML = (asrFinalText ? '<span style="color:var(--ink)">'+asrFinalText+'</span> ' : '') +
+        (asrInterimText ? '<span style="color:var(--amber)">'+asrInterimText+'…</span>' : (asrRecognizing ? '<span style="color:var(--muted)">listening…</span>' : ''));
+    }
+  }, 300);
+  workspaceCleanup = ()=>{ clearInterval(poll); };
+}
+
+function buildAsrDecoder(container){
+  container.innerHTML = `
+    <div class="ws-label">TRY THE AMBIGUITY: SAME SOUND, DIFFERENT WORDS</div>
+    <div class="ws-example-btns">
+      <button class="ws-example-btn" data-ex="ice cream">"ice cream"</button>
+      <button class="ws-example-btn" data-ex="i">"I scream"</button>
+      <button class="ws-example-btn" data-ex="the quick brown">"the quick brown"</button>
+    </div>
+    <div class="ws-row"><input type="text" id="lmInput" class="ws-input" placeholder="Type a word (try 'ice' or 'i')..." value="ice"></div>
+    <div class="ws-label">NEXT-WORD PREDICTIONS <span style="color:var(--dim)">(a real, tiny bigram language model)</span></div>
+    <div class="ws-suggest-list" id="lmSuggest"></div>
+  `;
+  function render(){
+    const raw = container.querySelector('#lmInput').value.trim();
+    const words = raw.toLowerCase().split(/\s+/).filter(Boolean);
+    const last = words[words.length-1] || '';
+    const preds = predictNext(last);
+    const wrap = container.querySelector('#lmSuggest');
+    if(!preds.length){ wrap.innerHTML = '<p class="ws-note">No predictions for "'+(last||'…')+'" in this tiny demo table — try "ice", "i", "the", "a", "good" or "how".</p>'; return; }
+    wrap.innerHTML = preds.map(([w,p])=>`
+      <div class="ws-suggest" data-word="${w}">
+        <span class="ws-bar-label">${w}</span>
+        <div class="ws-bar-track"><div class="ws-bar-fill" style="width:${(p*100).toFixed(0)}%"></div></div>
+        <span class="ws-bar-pct">${(p*100).toFixed(0)}%</span>
+      </div>`).join('');
+    wrap.querySelectorAll('.ws-suggest').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        container.querySelector('#lmInput').value = (raw + ' ' + el.dataset.word).trim();
+        render();
+      });
+    });
+  }
+  container.querySelector('#lmInput').addEventListener('input', render);
+  container.querySelectorAll('.ws-example-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{ container.querySelector('#lmInput').value = b.dataset.ex; render(); });
+  });
+  render();
+  workspaceCleanup = null;
+}
+
+function buildAsrOutput(container){
+  container.innerHTML = `
+    <div class="ws-label">FINAL TRANSCRIPT</div>
+    <div class="ws-textarea" id="finalTranscript" style="min-height:70px; white-space:pre-wrap;"></div>
+    <div class="ws-row"><button id="copyBtn" class="ws-btn ghost">📋 Copy Transcript</button><span class="ws-status" id="copyStat"></span></div>
+    <p class="ws-note">This plain text is exactly what a large language model would tokenize next — typically via byte-pair encoding (BPE) or a similar sub-word scheme — before any further language understanding happens.</p>
+  `;
+  function currentText(){
+    const t = (asrFinalText + (asrInterimText||'')).trim();
+    return t || '(Nothing recognized yet — start the microphone on Stage 1, or use the Decoder stage below.)';
+  }
+  container.querySelector('#finalTranscript').textContent = currentText();
+  container.querySelector('#copyBtn').addEventListener('click', async ()=>{
+    const text = container.querySelector('#finalTranscript').textContent;
+    try{ await navigator.clipboard.writeText(text); container.querySelector('#copyStat').textContent = 'Copied!'; }
+    catch(e){ container.querySelector('#copyStat').textContent = 'Copy not available in this context.'; }
+  });
+  const poll = setInterval(()=>{
+    const el = container.querySelector('#finalTranscript');
+    if(el) el.textContent = currentText();
+  }, 400);
+  workspaceCleanup = ()=>{ clearInterval(poll); };
+}
+
+function buildTtsInput(container){
+  container.innerHTML = `
+    <div class="ws-label">TYPE ANYTHING</div>
+    <textarea id="ttsTextarea" class="ws-textarea"></textarea>
+    <div class="ws-row"><span class="ws-status" id="charCount"></span></div>
+    <p class="ws-note">This exact text flows through every stage below — normalization, acoustic modeling, and synthesis.</p>
+  `;
+  const ta = container.querySelector('#ttsTextarea');
+  ta.value = ttsInputText;
+  container.querySelector('#charCount').textContent = ttsInputText.length + ' characters';
+  ta.addEventListener('input', ()=>{
+    ttsInputText = ta.value;
+    container.querySelector('#charCount').textContent = ttsInputText.length + ' characters';
+  });
+  workspaceCleanup = null;
+}
+
+function buildTtsG2p(container){
+  container.innerHTML = `
+    <div class="ws-label">TEXT NORMALIZATION</div>
+    <div class="ws-note" id="normOut" style="color:var(--ink); font-size:0.88rem;"></div>
+    <div class="ws-label" style="margin-top:10px;">SIMPLIFIED GRAPHEME→PHONEME <span style="color:var(--dim)">(rule-based, illustrative)</span></div>
+    <div class="ws-phon-row" id="phonRow"></div>
+    <p class="ws-note">Production systems use trained G2P models with large pronunciation dictionaries (e.g. CMUdict); this is a simplified rule pass over your actual text.</p>
+  `;
+  const norm = normalizeText(ttsInputText);
+  container.querySelector('#normOut').textContent = norm || '(type something on Stage 1)';
+  const words = norm.split(/\s+/).filter(Boolean).slice(0,14);
+  container.querySelector('#phonRow').innerHTML = words.map(w=>`
+    <div class="ws-phon-chip"><div class="w">${w.replace(/[^a-zA-Z']/g,'')}</div><div class="p">/${wordToPhonemes(w)}/</div></div>
+  `).join('');
+  workspaceCleanup = null;
+}
+
+function buildTtsAcoustic(container){
+  const words = ttsInputText.split(/\s+/).filter(Boolean);
+  container.innerHTML = `
+    <div class="ws-label">WORD-TIMED SPECTROGRAM STAND-IN <span style="color:var(--dim)">(synced to real synthesis timing)</span></div>
+    <div class="ws-spec-grid" id="specGrid">${words.map((w,i)=>`<div class="ws-spec-block" data-i="${i}">${(w.replace(/[^a-zA-Z']/g,'')||'…').slice(0,6)}</div>`).join('')}</div>
+    <div class="ws-row"><button id="ttsPreviewBtn" class="ws-btn">▶ Preview Timing</button><span class="ws-status" id="ttsPreviewStat"></span></div>
+    <p class="ws-note">Each block lights up when the browser's synthesizer actually reaches that word — real timing, stylized visual. A production acoustic model (Tacotron/FastSpeech-style) instead predicts the true frequency content as a mel-spectrogram.</p>
+  `;
+  container.querySelector('#ttsPreviewBtn').addEventListener('click', ()=>{
+    container.querySelector('#ttsPreviewStat').textContent = 'Playing…';
+    speakForVisual(ttsInputText,
+      (wordIndex)=>{ container.querySelectorAll('.ws-spec-block').forEach((el,i)=>el.classList.toggle('hot', i===wordIndex)); },
+      ()=>{ container.querySelectorAll('.ws-spec-block').forEach(el=>el.classList.remove('hot')); const s=container.querySelector('#ttsPreviewStat'); if(s) s.textContent='Done.'; }
+    );
+  });
+  workspaceCleanup = ()=>{ if('speechSynthesis' in window) speechSynthesis.cancel(); };
+}
+
+function buildTtsVocoder(container){
+  const voices = ('speechSynthesis' in window) ? speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang)) : [];
+  container.innerHTML = `
+    <div class="ws-label">SYNTHESIS CONTROLS <span style="color:var(--dim)">(real parameters, real audio)</span></div>
+    <div class="ws-slider-row"><span>Rate</span><input type="range" id="rateSlider" min="0.5" max="2" step="0.05" value="${ttsRate}"><span class="val" id="rateVal">${ttsRate.toFixed(2)}x</span></div>
+    <div class="ws-slider-row"><span>Pitch</span><input type="range" id="pitchSlider" min="0" max="2" step="0.05" value="${ttsPitch}"><span class="val" id="pitchVal">${ttsPitch.toFixed(2)}</span></div>
+    <div class="ws-row">
+      <select id="voiceSelect" class="ws-select">${voices.length ? voices.map((v,i)=>`<option value="${i}">${v.name} (${v.lang})</option>`).join('') : '<option>Default voice</option>'}</select>
+      <button id="ttsPlayBtn" class="ws-btn">▶ Play</button>
+      <button id="ttsStopBtn" class="ws-btn ghost">⏹ Stop</button>
+    </div>
+    <p class="ws-note">Rate, pitch and voice selection are the same production controls (comparable to SSML prosody tags) real TTS APIs expose.</p>
+  `;
+  const rateS = container.querySelector('#rateSlider'), pitchS = container.querySelector('#pitchSlider');
+  rateS.addEventListener('input', ()=>{ ttsRate=parseFloat(rateS.value); container.querySelector('#rateVal').textContent=ttsRate.toFixed(2)+'x'; });
+  pitchS.addEventListener('input', ()=>{ ttsPitch=parseFloat(pitchS.value); container.querySelector('#pitchVal').textContent=ttsPitch.toFixed(2); });
+  container.querySelector('#ttsPlayBtn').addEventListener('click', ()=>{
+    const sel = container.querySelector('#voiceSelect');
+    ttsVoice = voices[parseInt(sel.value,10)] || null;
+    speakForVisual(ttsInputText, ()=>{}, ()=>{});
+  });
+  container.querySelector('#ttsStopBtn').addEventListener('click', ()=>{ if('speechSynthesis' in window) speechSynthesis.cancel(); });
+  workspaceCleanup = ()=>{ if('speechSynthesis' in window) speechSynthesis.cancel(); };
+}
+
+function buildTtsOutput(container){
+  container.innerHTML = `
+    <div class="ws-label">FINAL AUDIO OUTPUT</div>
+    <div class="ws-row"><button id="finalPlayBtn" class="ws-btn">▶ Play Full Sentence</button></div>
+    <div class="ws-vu" id="vuMeter">${Array.from({length:16}).map(()=>'<span></span>').join('')}</div>
+    <p class="ws-note" id="durNote"></p>
+    <p class="ws-note">In production, this audio would usually stream out in small chunks as it's generated (chunked/streaming synthesis) to minimize the latency a listener perceives — a real engineering constraint, not just an audio-quality one.</p>
+  `;
+  const estWords = ttsInputText.split(/\s+/).filter(Boolean).length;
+  const estSec = (estWords/(2.3*ttsRate)).toFixed(1);
+  container.querySelector('#durNote').textContent = `Estimated duration at ${ttsRate.toFixed(2)}x: ~${estSec}s (rough estimate, not measured).`;
+  let vuInterval = null;
+  container.querySelector('#finalPlayBtn').addEventListener('click', ()=>{
+    speakForVisual(ttsInputText, ()=>{}, ()=>{ clearInterval(vuInterval); container.querySelectorAll('#vuMeter span').forEach(s=>s.style.height='4px'); });
+    vuInterval = setInterval(()=>{
+      container.querySelectorAll('#vuMeter span').forEach(s=>{
+        s.style.height = (('speechSynthesis' in window && speechSynthesis.speaking) ? (4+Math.random()*36) : 4) + 'px';
+      });
+    }, 90);
+  });
+  workspaceCleanup = ()=>{ if(vuInterval) clearInterval(vuInterval); if('speechSynthesis' in window) speechSynthesis.cancel(); };
+}
+
+const WORKSPACE_BUILDERS = {
+  'asr-0': buildAsrWave, 'asr-1': buildAsrSpec, 'asr-2': buildAsrAcoustic, 'asr-3': buildAsrDecoder, 'asr-4': buildAsrOutput,
+  'tts-0': buildTtsInput, 'tts-1': buildTtsG2p, 'tts-2': buildTtsAcoustic, 'tts-3': buildTtsVocoder, 'tts-4': buildTtsOutput
+};
+function renderWorkspace(){
+  if(workspaceCleanup){ try{ workspaceCleanup(); }catch(e){} workspaceCleanup = null; }
+  const el = document.getElementById('pipeWorkspace');
+  if(!el) return;
+  const builder = WORKSPACE_BUILDERS[pipeDirection + '-' + pipeIndex];
+  if(builder) builder(el);
+}
+
+function selectPipeStage(i, fromClick){
+  pipeIndex = i;
+  const s = currentStages()[i];
+  document.querySelectorAll('.pipe-box').forEach((el,idx)=>el.classList.toggle('active', idx===i));
+  document.querySelectorAll('.pipe-stage-btn').forEach((el,idx)=>el.classList.toggle('active', idx===i));
+
+  document.getElementById('captionBar2').textContent =
+    `STAGE ${i+1}/${currentStages().length} — ${s.name.toUpperCase()} · ${s.term.toUpperCase()}`;
+
+  const readout = document.getElementById('pipeReadout');
+  readout.innerHTML = `
+    <div class="letter-row">
+      <div class="ipa" style="font-size:1.1rem;">${s.term}</div>
+    </div>
+    <div class="tags">
+      <span class="tag place">${pipeDirection === 'asr' ? 'ASR' : 'TTS'}</span>
+      <span class="tag manner">Stage ${i+1} of ${currentStages().length}</span>
+    </div>
+    <p class="desc">${s.desc}</p>
+  `;
+  renderWorkspace();
+}
+
+function switchPipeDirection(dir){
+  stopAsrEverything();
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  pipeDirection = dir;
+  pipeIndex = 0;
+  document.querySelectorAll('.pipe-sub-btn').forEach(b=>b.classList.toggle('active', b.dataset.dir === dir));
+  document.getElementById('pipeSlate').textContent = dir === 'asr' ? 'SPEECH \u2192 TEXT' : 'TEXT \u2192 SPEECH';
+  renderPipeFlow();
+  renderPipeStageList();
+  selectPipeStage(0);
+}
+
+document.getElementById('pipeSubtoggle').addEventListener('click',(e)=>{
+  const btn = e.target.closest('.pipe-sub-btn');
+  if(!btn) return;
+  switchPipeDirection(btn.dataset.dir);
+});
+
+function renderArchGrid(){
+  const grid = document.getElementById('archGrid');
+  grid.innerHTML = ARCHITECTURES.map(a => `
+    <div class="arch-card">
+      <span class="arch-era">${a.era}</span>
+      <span class="arch-name">${a.name}</span>
+      <p>${a.desc}</p>
+    </div>
+  `).join('');
+}
+renderArchGrid();
+switchPipeDirection('asr');
+
+
+/* number keys 1-5 select a pipeline stage while the AI specimen is active */
+document.addEventListener('keydown',(e)=>{
+  if(currentMode !== 'ai') return;
+  const n = parseInt(e.key, 10);
+  if(n >= 1 && n <= currentStages().length){
+    e.preventDefault();
+    selectPipeStage(n-1, true);
+  }
+});
+
+/* ===================================================================
+   Specimen mode toggle (Human vocal tract vs. Machine pipeline)
+=================================================================== */
+let currentMode = 'human';
+function setMode(mode){
+  if(mode === currentMode) return;
+  // leaving AI: release mic/recognition/TTS and any running stage animation
+  if(currentMode === 'ai'){
+    if(workspaceCleanup){ try{ workspaceCleanup(); }catch(e){} workspaceCleanup = null; }
+    stopAsrEverything();
+  }
+  // always stop any in-flight speech when switching specimens
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+
+  currentMode = mode;
+  document.getElementById('viewHuman').style.display = mode === 'human' ? '' : 'none';
+  document.getElementById('viewAI').style.display = mode === 'ai' ? '' : 'none';
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('specimenTag').textContent = mode === 'human' ? 'SPECIMEN 01' : 'SPECIMEN 02';
+}
+document.getElementById('modeToggle').addEventListener('click',(e)=>{
+  const btn = e.target.closest('.mode-btn');
+  if(!btn) return;
+  setMode(btn.dataset.mode);
+});
+
+/* initial state: show B on Specimen 01, no audio autoplay on load */
+selectLetter('B', false);
+setMode('human');
+</script>
+
+</body>
+</html>
